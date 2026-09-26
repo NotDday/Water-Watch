@@ -40,7 +40,7 @@ export function AnimatedGauge({
       duration: 1200,
       easing: Easing.bezier(0.25, 0.1, 0.25, 1),
     });
-  }, [value]);
+  }, [value, progress]);
 
   const animatedProps = useAnimatedProps(() => ({
     strokeDashoffset: circumference * (1 - progress.value),

@@ -1,6 +1,5 @@
 import React from "react";
 import {
-  Alert,
   Pressable,
   ScrollView,
   StyleSheet,
@@ -14,8 +13,8 @@ import { LinearGradient } from "expo-linear-gradient";
 
 import { GlassCard } from "@/components/ui/glass-card";
 import { GradientBackground } from "@/components/ui/gradient-background";
-import { Palette , type AppPalette } from "@/constants/theme";
-import { type ThemePreference, useAppTheme } from "@/context/theme-context";
+import { Palette, type AppPalette } from "@/constants/theme";
+import { useAppTheme } from "@/context/theme-context";
 
 type MenuItemProps = {
   icon: React.ReactNode;
@@ -71,23 +70,6 @@ export default function ProfileScreen() {
   const { palette } = useAppTheme();
   const styles = React.useMemo(() => getStyles(palette), [palette]);
   const { preference, setPreference } = useAppTheme();
-
-  const chooseAppearance = () => {
-    const options: { label: string; value: ThemePreference }[] = [
-      { label: "Light", value: "light" },
-      { label: "Dark", value: "dark" },
-      { label: "System default", value: "system" },
-    ];
-
-    Alert.alert(
-      "Appearance",
-      "Choose how Water Watch should look.",
-      options.map(({ label, value }) => ({
-        text: value === preference ? `${label} ✓` : label,
-        onPress: () => setPreference(value),
-      })),
-    );
-  };
 
   return (
     <GradientBackground>

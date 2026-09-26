@@ -13,7 +13,7 @@ import { LinearGradient } from "expo-linear-gradient";
 
 import { GlassCard } from "@/components/ui/glass-card";
 import { GradientBackground } from "@/components/ui/gradient-background";
-import { BorderRadius, Palette, getRiskColor , type AppPalette } from "@/constants/theme";
+import { Palette, getRiskColor, type AppPalette } from "@/constants/theme";
 import { useAppTheme } from "@/context/theme-context";
 import { mockStations, mockCurrentReadings, mockPredictions, Station, SensorReading, Prediction } from "@/data/mockData";
 
