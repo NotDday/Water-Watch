@@ -1,9 +1,14 @@
 import React, { useState } from "react";
 import {
+  Alert,
+  KeyboardAvoidingView,
+  Modal,
+  Platform,
   Pressable,
   ScrollView,
   StyleSheet,
   Text,
+  TextInput,
   View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -85,11 +90,11 @@ function ComplaintCard({ complaint, index, isLast }: ComplaintCardProps) {
         {/* Footer */}
         <View style={styles.cardFooter}>
           <View style={styles.cardFooterLeft}>
-            <Ionicons name="location-outline" size={11} color={Palette.textTertiary} />
+            <Ionicons name="location-outline" size={11} color={palette.textTertiary} />
             <Text style={styles.cardLocation}>{complaint.location}</Text>
           </View>
           <View style={styles.cardFooterRight}>
-            <Ionicons name="calendar-outline" size={11} color={Palette.textTertiary} />
+            <Ionicons name="calendar-outline" size={11} color={palette.textTertiary} />
             <Text style={styles.cardDate}>{formatDate(complaint.createdAt)}</Text>
           </View>
         </View>
@@ -105,6 +110,10 @@ export default function ComplaintsScreen() {
   const { palette } = useAppTheme();
   const styles = React.useMemo(() => getStyles(palette), [palette]);
   const [activeTab, setActiveTab] = useState<TabId>("All");
+  const [showModal, setShowModal] = useState(false);
+  const [formCategory, setFormCategory] = useState('Saline Intrusion');
+  const [formDescription, setFormDescription] = useState('');
+  const [formLocation, setFormLocation] = useState('');
 
   const counts = TABS.reduce((acc, t) => {
     acc[t] = t === "All" ? mockComplaints.length : mockComplaints.filter((c) => c.status === t).length;
@@ -125,7 +134,7 @@ export default function ComplaintsScreen() {
               <Text style={styles.headerSub}>Track your field reports</Text>
             </View>
             {/* New complaint CTA */}
-            <Pressable style={({ pressed }) => [pressed && { opacity: 0.8 }]}>
+            <Pressable style={({ pressed }) => [pressed && { opacity: 0.8 }]} onPress={() => setShowModal(true)}>
               <LinearGradient
                 colors={[Palette.accentPurple, Palette.accentBlue]}
                 start={{ x: 0, y: 0 }}
@@ -186,7 +195,7 @@ export default function ComplaintsScreen() {
           <View style={styles.timeline}>
             {filtered.length === 0 ? (
               <Animated.View entering={FadeIn} style={styles.emptyState}>
-                <Ionicons name="document-outline" size={40} color={Palette.textTertiary} />
+                <Ionicons name="document-outline" size={40} color={palette.textTertiary} />
                 <Text style={styles.emptyText}>No complaints in this category</Text>
               </Animated.View>
             ) : (
@@ -198,6 +207,96 @@ export default function ComplaintsScreen() {
 
         </ScrollView>
       </SafeAreaView>
+
+      <Modal
+        visible={showModal}
+        animationType="slide"
+        transparent
+        onRequestClose={() => setShowModal(false)}
+      >
+        <KeyboardAvoidingView
+          behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+          style={styles.modalOverlay}
+        >
+          <GlassCard style={styles.modalSheet}>
+            <Text style={styles.modalTitle}>Report an Issue</Text>
+
+            <View>
+              <Text style={styles.modalLabel}>Category</Text>
+              <View style={styles.categoryRow}>
+                {(['Saline Intrusion', 'Water Quality', 'Infrastructure', 'Flooding'] as const).map((cat) => (
+                  <Pressable
+                    key={cat}
+                    onPress={() => setFormCategory(cat)}
+                    style={[styles.categoryPill, formCategory === cat && styles.categoryPillActive]}
+                  >
+                    <Text style={[styles.categoryPillText, formCategory === cat && styles.categoryPillTextActive]}>
+                      {cat}
+                    </Text>
+                  </Pressable>
+                ))}
+              </View>
+            </View>
+
+            <View>
+              <Text style={styles.modalLabel}>Description</Text>
+              <TextInput
+                style={[styles.textInput, { minHeight: 90 }]}
+                placeholder="Describe the issue..."
+                placeholderTextColor={palette.textTertiary}
+                multiline
+                numberOfLines={4}
+                value={formDescription}
+                onChangeText={setFormDescription}
+              />
+            </View>
+
+            <View>
+              <Text style={styles.modalLabel}>Location</Text>
+              <TextInput
+                style={styles.textInput}
+                placeholder="Your location or ward..."
+                placeholderTextColor={palette.textTertiary}
+                value={formLocation}
+                onChangeText={setFormLocation}
+              />
+            </View>
+
+            <View style={styles.modalActions}>
+              <Pressable
+                style={styles.cancelBtn}
+                onPress={() => {
+                  setShowModal(false);
+                  setFormDescription('');
+                  setFormLocation('');
+                }}
+              >
+                <Text style={styles.cancelBtnText}>Cancel</Text>
+              </Pressable>
+              <Pressable
+                style={styles.submitBtn}
+                onPress={() => {
+                  if (!formDescription.trim()) {
+                    Alert.alert('Required', 'Please enter a description.');
+                    return;
+                  }
+                  Alert.alert(
+                    'Report Submitted',
+                    `Your complaint has been registered.\nRef: CMP-${Date.now().toString().slice(-6)}`,
+                    [{ text: 'OK', onPress: () => {
+                      setShowModal(false);
+                      setFormDescription('');
+                      setFormLocation('');
+                    }}],
+                  );
+                }}
+              >
+                <Text style={styles.submitBtnText}>Submit</Text>
+              </Pressable>
+            </View>
+          </GlassCard>
+        </KeyboardAvoidingView>
+      </Modal>
     </GradientBackground>
   );
 }
@@ -247,4 +346,20 @@ const getStyles = (themePalette: AppPalette) => StyleSheet.create({
 
   emptyState: { alignItems: "center", gap: 10, paddingVertical: 40 },
   emptyText: { fontSize: 14, color: themePalette.textTertiary },
+
+  modalOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.6)', justifyContent: 'flex-end' },
+  modalSheet: { borderRadius: 0, borderBottomLeftRadius: 0, borderBottomRightRadius: 0, borderTopLeftRadius: 24, borderTopRightRadius: 24, padding: 24, paddingBottom: 40, gap: 16 },
+  modalTitle: { fontSize: 18, fontWeight: '800' as const, color: themePalette.textPrimary },
+  modalLabel: { fontSize: 11, fontWeight: '700' as const, color: themePalette.textSecondary, textTransform: 'uppercase' as const, letterSpacing: 0.5, marginBottom: 8 },
+  categoryRow: { flexDirection: 'row' as const, flexWrap: 'wrap' as const, gap: 8 },
+  categoryPill: { paddingHorizontal: 12, paddingVertical: 7, borderRadius: 16, borderWidth: 1, borderColor: themePalette.glassBorder, backgroundColor: themePalette.glassBackground },
+  categoryPillActive: { backgroundColor: Palette.accentPurple + '25', borderColor: Palette.accentPurple },
+  categoryPillText: { fontSize: 12, fontWeight: '600' as const, color: themePalette.textSecondary },
+  categoryPillTextActive: { color: Palette.accentPurple, fontWeight: '700' as const },
+  textInput: { backgroundColor: themePalette.glassBackground, borderWidth: 1, borderColor: themePalette.glassBorder, borderRadius: 12, paddingHorizontal: 14, paddingVertical: 12, color: themePalette.textPrimary, fontSize: 14, textAlignVertical: 'top' as const },
+  modalActions: { flexDirection: 'row' as const, gap: 12 },
+  cancelBtn: { flex: 1, alignItems: 'center' as const, justifyContent: 'center' as const, paddingVertical: 13, borderRadius: 14, borderWidth: 1, borderColor: themePalette.glassBorder },
+  cancelBtnText: { fontSize: 15, fontWeight: '600' as const, color: themePalette.textSecondary },
+  submitBtn: { flex: 1, alignItems: 'center' as const, justifyContent: 'center' as const, paddingVertical: 13, borderRadius: 14, backgroundColor: Palette.accentPurple },
+  submitBtnText: { fontSize: 15, fontWeight: '700' as const, color: '#fff' },
 });

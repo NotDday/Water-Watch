@@ -1,12 +1,15 @@
 import React from "react";
 import {
+  Alert,
   Dimensions,
+  Pressable,
   ScrollView,
   StyleSheet,
   Text,
   View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { useRouter } from "expo-router";
 import Animated, { FadeIn, FadeInDown, FadeInLeft } from "react-native-reanimated";
 import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
@@ -75,6 +78,7 @@ function StationDot({ id, active }: StationDotProps) {
 }
 
 export default function HomeScreen() {
+  const router = useRouter();
   const { palette } = useAppTheme();
   const styles = React.useMemo(() => getStyles(palette), [palette]);
   const currentStationId = "ST-001";
@@ -104,7 +108,7 @@ export default function HomeScreen() {
               </View>
             </View>
             <View style={styles.timeBox}>
-              <Ionicons name="time-outline" size={12} color={Palette.textTertiary} />
+              <Ionicons name="time-outline" size={12} color={palette.textTertiary} />
               <Text style={styles.timeText}>{timeStr}</Text>
               <Text style={styles.dateText}>{dateStr}</Text>
             </View>
@@ -112,21 +116,23 @@ export default function HomeScreen() {
 
           {/* ── Live alert banner ───────────────────── */}
           <Animated.View entering={FadeInDown.duration(500).delay(100)}>
-            <LinearGradient
-              colors={[riskColor + "33", riskColor + "11"]}
-              start={{ x: 0, y: 0 }}
-              end={{ x: 1, y: 0 }}
-              style={[styles.alertBanner, { borderColor: riskColor + "55" }]}
-            >
-              <View style={[styles.alertDot, { backgroundColor: riskColor }]} />
-              <Text style={[styles.alertText, { color: riskColor }]}>
-                {riskLabel === "Low" ? "Conditions Normal" :
-                  riskLabel === "Moderate" ? "Moderate salinity detected" :
-                  riskLabel === "High" ? "High saline intrusion risk" :
-                  "CRITICAL — Action required"}
-              </Text>
-              <Ionicons name="chevron-forward" size={14} color={riskColor} style={{ marginLeft: "auto" }} />
-            </LinearGradient>
+            <Pressable onPress={() => router.push('/monitoring')} style={({ pressed }) => pressed && { opacity: 0.85 }}>
+              <LinearGradient
+                colors={[riskColor + "33", riskColor + "11"]}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 0 }}
+                style={[styles.alertBanner, { borderColor: riskColor + "55" }]}
+              >
+                <View style={[styles.alertDot, { backgroundColor: riskColor }]} />
+                <Text style={[styles.alertText, { color: riskColor }]}>
+                  {riskLabel === "Low" ? "Conditions Normal" :
+                    riskLabel === "Moderate" ? "Moderate salinity detected" :
+                    riskLabel === "High" ? "High saline intrusion risk" :
+                    "CRITICAL — Action required"}
+                </Text>
+                <Ionicons name="chevron-forward" size={14} color={riskColor} style={{ marginLeft: "auto" }} />
+              </LinearGradient>
+            </Pressable>
           </Animated.View>
 
           {/* ── Hero risk card ─────────────────────── */}
@@ -259,22 +265,30 @@ export default function HomeScreen() {
 
           {/* ── Quick actions ─────────────────────── */}
           <Animated.View entering={FadeInDown.duration(500).delay(600)} style={styles.actionsRow}>
-            <GlassCard style={styles.actionCard}>
-              <Ionicons name="cellular" size={22} color={Palette.accentPurple} />
-              <Text style={styles.actionLabel}>Monitoring</Text>
-            </GlassCard>
-            <GlassCard style={styles.actionCard}>
-              <Ionicons name="alert-circle-outline" size={22} color={Palette.accentOrange} />
-              <Text style={styles.actionLabel}>Report</Text>
-            </GlassCard>
-            <GlassCard style={styles.actionCard}>
-              <Ionicons name="share-social-outline" size={22} color={Palette.accentCyan} />
-              <Text style={styles.actionLabel}>Share</Text>
-            </GlassCard>
-            <GlassCard style={styles.actionCard}>
-              <Ionicons name="notifications-outline" size={22} color={Palette.accentGreen} />
-              <Text style={styles.actionLabel}>Alerts</Text>
-            </GlassCard>
+            <Pressable onPress={() => router.push('/monitoring')} style={({ pressed }) => [styles.actionCardPressable, pressed && { opacity: 0.75 }]}>
+              <GlassCard style={styles.actionCard}>
+                <Ionicons name="cellular" size={22} color={Palette.accentPurple} />
+                <Text style={styles.actionLabel}>Monitoring</Text>
+              </GlassCard>
+            </Pressable>
+            <Pressable onPress={() => router.push('/complaints')} style={({ pressed }) => [styles.actionCardPressable, pressed && { opacity: 0.75 }]}>
+              <GlassCard style={styles.actionCard}>
+                <Ionicons name="alert-circle-outline" size={22} color={Palette.accentOrange} />
+                <Text style={styles.actionLabel}>Report</Text>
+              </GlassCard>
+            </Pressable>
+            <Pressable onPress={() => Alert.alert('Share', 'Sharing functionality coming soon.')} style={({ pressed }) => [styles.actionCardPressable, pressed && { opacity: 0.75 }]}>
+              <GlassCard style={styles.actionCard}>
+                <Ionicons name="share-social-outline" size={22} color={Palette.accentCyan} />
+                <Text style={styles.actionLabel}>Share</Text>
+              </GlassCard>
+            </Pressable>
+            <Pressable onPress={() => Alert.alert('Alerts', 'Push notification preferences coming soon.')} style={({ pressed }) => [styles.actionCardPressable, pressed && { opacity: 0.75 }]}>
+              <GlassCard style={styles.actionCard}>
+                <Ionicons name="notifications-outline" size={22} color={Palette.accentGreen} />
+                <Text style={styles.actionLabel}>Alerts</Text>
+              </GlassCard>
+            </Pressable>
           </Animated.View>
 
         </ScrollView>
@@ -354,6 +368,7 @@ const getStyles = (themePalette: AppPalette) => StyleSheet.create({
 
   // quick actions
   actionsRow: { flexDirection: "row", gap: 10 },
+  actionCardPressable: { flex: 1 },
   actionCard: { flex: 1, alignItems: "center", gap: 8, paddingVertical: 14 },
   actionLabel: { fontSize: 10, fontWeight: "600", color: themePalette.textSecondary, textAlign: "center" },
 });

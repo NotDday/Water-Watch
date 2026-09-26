@@ -43,3 +43,6 @@ Desktop.ini
 
 # Tooling / AI metadata
 .claude/
+.vscode/
+
+expo-env.d.ts

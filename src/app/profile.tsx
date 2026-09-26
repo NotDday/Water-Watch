@@ -1,5 +1,6 @@
 import React from "react";
 import {
+  Alert,
   Pressable,
   ScrollView,
   StyleSheet,
@@ -42,7 +43,7 @@ function MenuItem({ icon, label, subtitle, value, accent, danger, index, onPress
         </View>
         <View style={styles.menuRight}>
           {value && <Text style={styles.menuValue}>{value}</Text>}
-          <Ionicons name="chevron-forward" size={14} color={Palette.textTertiary} />
+          <Ionicons name="chevron-forward" size={14} color={palette.textTertiary} />
         </View>
       </Pressable>
     </Animated.View>
@@ -67,9 +68,8 @@ function Divider() {
 }
 
 export default function ProfileScreen() {
-  const { palette } = useAppTheme();
+  const { palette, preference, setPreference } = useAppTheme();
   const styles = React.useMemo(() => getStyles(palette), [palette]);
-  const { preference, setPreference } = useAppTheme();
 
   return (
     <GradientBackground>
@@ -169,6 +169,7 @@ export default function ProfileScreen() {
               label="Alert Preferences"
               subtitle="Risk thresholds & push alerts"
               accent={Palette.accentBlue}
+              onPress={() => Alert.alert('Coming Soon', 'Alert preferences will be available in a future update.')}
             />
             <Divider />
             <MenuItem
@@ -178,6 +179,7 @@ export default function ProfileScreen() {
               subtitle="Manage watched stations"
               value="3"
               accent={Palette.accentCyan}
+              onPress={() => Alert.alert('Coming Soon', 'Station management will be available in a future update.')}
             />
             <Divider />
             <MenuItem
@@ -187,6 +189,7 @@ export default function ProfileScreen() {
               subtitle="Data polling frequency"
               value="5 min"
               accent={Palette.accentGreen}
+              onPress={() => Alert.alert('Coming Soon', 'Auto-refresh settings will be available in a future update.')}
             />
           </MenuSection>
 
@@ -197,6 +200,7 @@ export default function ProfileScreen() {
               label="Edit Profile"
               subtitle="Name, photo, bio"
               accent={Palette.accentPurple}
+              onPress={() => Alert.alert('Coming Soon', 'Profile editing will be available in a future update.')}
             />
             <Divider />
             <MenuItem
@@ -204,6 +208,7 @@ export default function ProfileScreen() {
               icon={<Ionicons name="lock-closed-outline" size={16} color={Palette.accentOrange} />}
               label="Change Password"
               accent={Palette.accentOrange}
+              onPress={() => Alert.alert('Coming Soon', 'Password change will be available in a future update.')}
             />
             <Divider />
             <MenuItem
@@ -212,6 +217,7 @@ export default function ProfileScreen() {
               label="Language"
               value="English"
               accent={Palette.accentBlue}
+              onPress={() => Alert.alert('Language', 'English is the only supported language at this time.')}
             />
           </MenuSection>
 
@@ -250,6 +256,7 @@ export default function ProfileScreen() {
               label="About"
               subtitle="Water Watch v1.0.0"
               accent={Palette.accentCyan}
+              onPress={() => Alert.alert('Water Watch', 'Version 1.0.0\nBuilt for Cherthala Municipal Authority, Kerala.\n\nMonitoring saline water intrusion in real time.')}
             />
             <Divider />
             <MenuItem
@@ -257,12 +264,23 @@ export default function ProfileScreen() {
               icon={<Ionicons name="document-text-outline" size={16} color={Palette.textSecondary} />}
               label="Privacy Policy"
               accent={Palette.textSecondary}
+              onPress={() => Alert.alert('Privacy Policy', 'Visit waterwatch.in/privacy to view our full privacy policy.')}
             />
           </MenuSection>
 
           {/* ── Logout ────────────────────────────── */}
           <Animated.View entering={FadeInDown.duration(400).delay(860)} style={styles.logoutWrap}>
-            <Pressable style={({ pressed }) => [styles.logoutBtn, pressed && { opacity: 0.7 }]}>
+            <Pressable
+              style={({ pressed }) => [styles.logoutBtn, pressed && { opacity: 0.7 }]}
+              onPress={() => Alert.alert(
+                'Log Out',
+                'Are you sure you want to log out?',
+                [
+                  { text: 'Cancel', style: 'cancel' },
+                  { text: 'Log Out', style: 'destructive', onPress: () => Alert.alert('Logged Out', 'You have been logged out successfully.') },
+                ]
+              )}
+            >
               <Ionicons name="log-out-outline" size={18} color={Palette.accentRed} />
               <Text style={styles.logoutText}>Log Out</Text>
             </Pressable>

@@ -123,7 +123,7 @@ export const mockComplaints: Complaint[] = [
   {
     id: 'CMP-2023-001',
     userId: 'U-001',
-    category: 'Saline Water Intrusion',
+    category: 'Saline Intrusion',
     description: 'Drinking water wells in my area have suddenly turned very salty over the last two days.',
     photo: null,
     location: 'Arookutty Panchayat, Ward 4',

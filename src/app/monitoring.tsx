@@ -92,7 +92,7 @@ function StationCard({ station, readings, prediction, index, expanded, onToggle 
             <View style={styles.stationMeta}>
               <Text style={styles.stationName}>{station.name}</Text>
               <View style={styles.stationLocRow}>
-                <Ionicons name="location-outline" size={10} color={Palette.textTertiary} />
+                <Ionicons name="location-outline" size={10} color={palette.textTertiary} />
                 <Text style={styles.stationLoc}>{station.location}</Text>
               </View>
             </View>
@@ -107,7 +107,7 @@ function StationCard({ station, readings, prediction, index, expanded, onToggle 
             <Ionicons
               name={expanded ? "chevron-up" : "chevron-down"}
               size={14}
-              color={Palette.textTertiary}
+              color={palette.textTertiary}
               style={{ marginLeft: 4 }}
             />
           </View>
@@ -169,7 +169,7 @@ function StationCard({ station, readings, prediction, index, expanded, onToggle 
 
             {/* Coordinates strip */}
             <View style={styles.coordsRow}>
-              <Ionicons name="globe-outline" size={12} color={Palette.textTertiary} />
+              <Ionicons name="globe-outline" size={12} color={palette.textTertiary} />
               <Text style={styles.coordsText}>
                 {station.coordinates.lat.toFixed(4)}°N · {station.coordinates.lng.toFixed(4)}°E
               </Text>
@@ -184,7 +184,7 @@ function StationCard({ station, readings, prediction, index, expanded, onToggle 
 export default function MonitoringScreen() {
   const { palette } = useAppTheme();
   const styles = React.useMemo(() => getStyles(palette), [palette]);
-  const [expandedId, setExpandedId] = useState<string>("ST-001");
+  const [expandedId, setExpandedId] = useState<string | null>("ST-001");
 
   const totalStations = mockStations.length;
   const highRisk = mockPredictions.filter((p) => p.riskLevel === "High" || p.riskLevel === "Critical").length;
@@ -246,7 +246,7 @@ export default function MonitoringScreen() {
               prediction={mockPredictions.find((p) => p.stationId === station.id)}
               index={idx}
               expanded={expandedId === station.id}
-              onToggle={() => setExpandedId(expandedId === station.id ? "" : station.id)}
+              onToggle={() => setExpandedId(expandedId === station.id ? null : station.id)}
             />
           ))}
 
