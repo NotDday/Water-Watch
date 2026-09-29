@@ -8,6 +8,7 @@ const supabaseAnonKey = process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY!;
 const isClient = typeof window !== "undefined";
 
 // Custom storage adapter that lazily loads AsyncStorage only on the client
+/* eslint-disable @typescript-eslint/no-require-imports */
 const clientStorage = isClient
   ? {
       getItem: (key: string) =>
@@ -18,6 +19,7 @@ const clientStorage = isClient
         require("@react-native-async-storage/async-storage").default.removeItem(key),
     }
   : undefined;
+/* eslint-enable @typescript-eslint/no-require-imports */
 
 export const supabase = createClient<Database>(supabaseUrl, supabaseAnonKey, {
   auth: {

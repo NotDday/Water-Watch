@@ -17,6 +17,7 @@ import { GradientBackground } from "@/components/ui/gradient-background";
 import { Palette, type AppPalette } from "@/constants/theme";
 import { useAuth } from "@/context/auth-context";
 import { useAppTheme } from "@/context/theme-context";
+import { useComplaintCount } from "@/hooks/useSupabaseData";
 
 type MenuItemProps = {
   icon: React.ReactNode;
@@ -71,6 +72,7 @@ function Divider() {
 export default function ProfileScreen() {
   const { palette, preference, setPreference } = useAppTheme();
   const { user, signOut } = useAuth();
+  const complaintCount = useComplaintCount(user?.id);
   const styles = React.useMemo(() => getStyles(palette), [palette]);
 
   const fullName = user?.user_metadata?.full_name ?? "User";
@@ -117,7 +119,7 @@ export default function ProfileScreen() {
           <Animated.View entering={FadeInLeft.duration(500).delay(200)} style={styles.statsRow}>
             <GlassCard style={styles.statCard}>
               <Ionicons name="document-text-outline" size={16} color={Palette.accentBlue} />
-              <Text style={styles.statVal}>12</Text>
+              <Text style={styles.statVal}>{complaintCount}</Text>
               <Text style={styles.statLab}>Reports</Text>
             </GlassCard>
             <GlassCard style={styles.statCard}>

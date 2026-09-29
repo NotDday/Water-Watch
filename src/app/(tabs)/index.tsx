@@ -19,7 +19,7 @@ import { GlassCard } from "@/components/ui/glass-card";
 import { GradientBackground } from "@/components/ui/gradient-background";
 import { BorderRadius, Palette, type AppPalette, getRiskColor } from "@/constants/theme";
 import { useAppTheme } from "@/context/theme-context";
-import { mockCurrentReadings, mockPredictions, mockStations } from "@/data/mockData";
+import { useStations, useLatestReadings, useLatestPredictions } from "@/hooks/useSupabaseData";
 
 const { width: SCREEN_W } = Dimensions.get("window");
 
@@ -57,22 +57,21 @@ function MetricTile({ icon, label, value, unit, accentColor, delay }: MetricTile
 }
 
 type StationDotProps = {
-  id: string;
+  station: { id: string; location: string } | undefined;
+  riskLevel: string | undefined;
   active: boolean;
 };
 
-function StationDot({ id, active }: StationDotProps) {
+function StationDot({ station, riskLevel, active }: StationDotProps) {
   const { palette } = useAppTheme();
   const styles = React.useMemo(() => getStyles(palette), [palette]);
-  const station = mockStations.find((s) => s.id === id);
-  const prediction = mockPredictions.find((p) => p.stationId === id);
-  const riskColor = getRiskColor(prediction?.riskLevel);
+  const riskColor = getRiskColor(riskLevel);
   return (
     <View style={styles.stationDot}>
       <View style={[styles.dotOuter, { borderColor: riskColor + "60" }]}>
         <View style={[styles.dotInner, { backgroundColor: riskColor }]} />
       </View>
-      <Text style={[styles.dotLabel, { color: palette.textTertiary }]}>{station?.location.split(" ")[0]}</Text>
+      <Text style={[styles.dotLabel, { color: palette.textTertiary }]}>{station?.location ? station.location.split(" ")[0] : ""}</Text>
     </View>
   );
 }
@@ -81,13 +80,20 @@ export default function HomeScreen() {
   const router = useRouter();
   const { palette } = useAppTheme();
   const styles = React.useMemo(() => getStyles(palette), [palette]);
-  const currentStationId = "ST-001";
-  const readings = mockCurrentReadings[currentStationId];
-  const prediction = mockPredictions.find((p) => p.stationId === currentStationId);
 
-  const riskColor = getRiskColor(prediction?.riskLevel);
-  const riskProbability = prediction?.riskProbability ?? 0;
-  const riskLabel = prediction?.riskLevel ?? "Unknown";
+  const { stations } = useStations();
+  const stationIds = React.useMemo(() => stations.map((s) => s.id), [stations]);
+  const { readings: readingsMap } = useLatestReadings(stationIds);
+  const { predictions } = useLatestPredictions(stationIds);
+
+  const currentStation = stations[0];
+  const currentStationId = currentStation?.id ?? "";
+  const readings = readingsMap[currentStationId];
+  const prediction = predictions.find((p) => p.station_id === currentStationId);
+
+  const riskColor = getRiskColor(prediction?.risk_level);
+  const riskProbability = prediction?.risk_probability ?? 0;
+  const riskLabel = prediction?.risk_level ?? "Unknown";
 
   const now = new Date();
   const timeStr = now.toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit" });
@@ -164,15 +170,15 @@ export default function HomeScreen() {
 
                   <View style={styles.heroStatRow}>
                     <Ionicons name="water-outline" size={13} color={Palette.accentCyan} />
-                    <Text style={styles.heroStatText}>EC {readings.ec} µS/cm</Text>
+                    <Text style={styles.heroStatText}>EC {readings?.ec} µS/cm</Text>
                   </View>
                   <View style={styles.heroStatRow}>
                     <MaterialCommunityIcons name="wave" size={13} color={Palette.accentBlue} />
-                    <Text style={styles.heroStatText}>Level {readings.waterLevel}m</Text>
+                    <Text style={styles.heroStatText}>Level {readings?.water_level}m</Text>
                   </View>
                   <View style={styles.heroStatRow}>
                     <Ionicons name="time-outline" size={13} color={Palette.textTertiary} />
-                    <Text style={styles.heroStatText}>{prediction?.predictionHorizon} forecast</Text>
+                    <Text style={styles.heroStatText}>{prediction?.prediction_horizon} forecast</Text>
                   </View>
                 </View>
               </View>
@@ -181,8 +187,8 @@ export default function HomeScreen() {
               <View style={styles.stationRow}>
                 <Text style={styles.stationRowLabel}>All Stations</Text>
                 <View style={styles.stationDots}>
-                  {mockStations.map((s) => (
-                    <StationDot key={s.id} id={s.id} active={s.id === currentStationId} />
+                  {stations.map((s) => (
+                    <StationDot key={s.id} station={s} riskLevel={predictions.find((p) => p.station_id === s.id)?.risk_level} active={s.id === currentStationId} />
                   ))}
                 </View>
               </View>
@@ -206,7 +212,7 @@ export default function HomeScreen() {
             <MetricTile
               icon={<MaterialCommunityIcons name="lightning-bolt" size={18} color={Palette.accentCyan} />}
               label="Electrical Conductivity"
-              value={readings.ec.toFixed(0)}
+              value={readings?.ec?.toFixed(0) ?? "—"}
               unit="µS/cm"
               accentColor={Palette.accentCyan}
               delay={300}
@@ -214,7 +220,7 @@ export default function HomeScreen() {
             <MetricTile
               icon={<MaterialCommunityIcons name="water-opacity" size={18} color={Palette.accentBlue} />}
               label="Total Dissolved Solids"
-              value={readings.tds.toFixed(0)}
+              value={readings?.tds?.toFixed(0) ?? "—"}
               unit="ppm"
               accentColor={Palette.accentBlue}
               delay={360}
@@ -222,7 +228,7 @@ export default function HomeScreen() {
             <MetricTile
               icon={<MaterialCommunityIcons name="ph" size={18} color={Palette.accentGreen} />}
               label="pH Level"
-              value={readings.ph.toFixed(1)}
+              value={readings?.ph?.toFixed(1) ?? "—"}
               unit="pH"
               accentColor={Palette.accentGreen}
               delay={420}
@@ -230,7 +236,7 @@ export default function HomeScreen() {
             <MetricTile
               icon={<Ionicons name="thermometer-outline" size={18} color={Palette.accentOrange} />}
               label="Water Temp"
-              value={readings.temperature.toFixed(1)}
+              value={readings?.temperature?.toFixed(1) ?? "—"}
               unit="°C"
               accentColor={Palette.accentOrange}
               delay={480}
@@ -245,14 +251,14 @@ export default function HomeScreen() {
                   <Ionicons name="water" size={16} color={Palette.accentBlue} />
                   <Text style={styles.levelTitle}>Water Level</Text>
                 </View>
-                <Text style={styles.levelValue}>{readings.waterLevel}m</Text>
+                <Text style={styles.levelValue}>{readings?.water_level ?? "—"}m</Text>
               </View>
               <View style={styles.levelTrack}>
                 <LinearGradient
                   colors={[Palette.accentBlue, Palette.accentCyan]}
                   start={{ x: 0, y: 0 }}
                   end={{ x: 1, y: 0 }}
-                  style={[styles.levelFill, { width: `${(readings.waterLevel / 5) * 100}%` }]}
+                  style={[styles.levelFill, { width: `${((readings?.water_level ?? 0) / 5) * 100}%` }]}
                 />
               </View>
               <View style={styles.levelScale}>

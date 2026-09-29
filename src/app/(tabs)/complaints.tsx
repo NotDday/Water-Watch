@@ -20,7 +20,9 @@ import { GlassCard } from "@/components/ui/glass-card";
 import { GradientBackground } from "@/components/ui/gradient-background";
 import { Palette , type AppPalette } from "@/constants/theme";
 import { useAppTheme } from "@/context/theme-context";
-import { mockComplaints, ComplaintStatus, Complaint } from "@/data/mockData";
+import { useComplaints, submitComplaint, type Complaint } from "@/hooks/useSupabaseData";
+
+type ComplaintStatus = "Submitted" | "Under Investigation" | "Action Taken" | "Resolved";
 
 const STATUS_CONFIG: Record<ComplaintStatus, { color: string; icon: keyof typeof Ionicons.glyphMap; label: string }> = {
   Submitted: { color: Palette.accentBlue, icon: "paper-plane-outline", label: "Submitted" },
@@ -95,7 +97,7 @@ function ComplaintCard({ complaint, index, isLast }: ComplaintCardProps) {
           </View>
           <View style={styles.cardFooterRight}>
             <Ionicons name="calendar-outline" size={11} color={palette.textTertiary} />
-            <Text style={styles.cardDate}>{formatDate(complaint.createdAt)}</Text>
+            <Text style={styles.cardDate}>{formatDate(complaint.created_at)}</Text>
           </View>
         </View>
       </GlassCard>
@@ -114,13 +116,16 @@ export default function ComplaintsScreen() {
   const [formCategory, setFormCategory] = useState('Saline Intrusion');
   const [formDescription, setFormDescription] = useState('');
   const [formLocation, setFormLocation] = useState('');
+  const [submitting, setSubmitting] = useState(false);
+
+  const { complaints, refresh } = useComplaints();
 
   const counts = TABS.reduce((acc, t) => {
-    acc[t] = t === "All" ? mockComplaints.length : mockComplaints.filter((c) => c.status === t).length;
+    acc[t] = t === "All" ? complaints.length : complaints.filter((c) => c.status === t).length;
     return acc;
   }, {} as Record<TabId, number>);
 
-  const filtered = activeTab === "All" ? mockComplaints : mockComplaints.filter((c) => c.status === activeTab);
+  const filtered = activeTab === "All" ? complaints : complaints.filter((c) => c.status === activeTab);
 
   return (
     <GradientBackground>
@@ -275,23 +280,32 @@ export default function ComplaintsScreen() {
               </Pressable>
               <Pressable
                 style={styles.submitBtn}
-                onPress={() => {
+                disabled={submitting}
+                onPress={async () => {
                   if (!formDescription.trim()) {
                     Alert.alert('Required', 'Please enter a description.');
                     return;
                   }
-                  Alert.alert(
-                    'Report Submitted',
-                    `Your complaint has been registered.\nRef: CMP-${Date.now().toString().slice(-6)}`,
-                    [{ text: 'OK', onPress: () => {
-                      setShowModal(false);
-                      setFormDescription('');
-                      setFormLocation('');
-                    }}],
-                  );
+                  setSubmitting(true);
+                  try {
+                    await submitComplaint({
+                      category: formCategory,
+                      description: formDescription.trim(),
+                      location: formLocation.trim() || 'Not specified',
+                    });
+                    setShowModal(false);
+                    setFormDescription('');
+                    setFormLocation('');
+                    refresh();
+                    Alert.alert('Report Submitted', 'Your complaint has been registered.');
+                  } catch (e: any) {
+                    Alert.alert('Error', e.message ?? 'Failed to submit complaint.');
+                  } finally {
+                    setSubmitting(false);
+                  }
                 }}
               >
-                <Text style={styles.submitBtnText}>Submit</Text>
+                <Text style={styles.submitBtnText}>{submitting ? 'Submitting…' : 'Submit'}</Text>
               </Pressable>
             </View>
           </GlassCard>
