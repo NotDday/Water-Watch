@@ -1,26 +1,30 @@
-import { DarkTheme, DefaultTheme, ThemeProvider as RouterThemeProvider } from 'expo-router';
+import { DarkTheme, DefaultTheme, ThemeProvider as RouterThemeProvider, Stack } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
 import {
-  Provider as PaperProvider,
   MD3DarkTheme,
+  Provider as PaperProvider,
 } from 'react-native-paper';
 
 import { AnimatedSplashOverlay } from '@/components/animated-icon';
-import AppTabs from '@/components/app-tabs';
+import { AuthProvider, useAuth } from '@/context/auth-context';
 import { ThemeProvider, useAppTheme } from '@/context/theme-context';
 
 SplashScreen.preventAutoHideAsync();
 
-export default function TabLayout() {
+export default function RootLayout() {
   return (
     <ThemeProvider>
-      <ThemedApp />
+      <AuthProvider>
+        <ThemedApp />
+      </AuthProvider>
     </ThemeProvider>
   );
 }
 
 function ThemedApp() {
   const { palette, scheme } = useAppTheme();
+  const { isLoggedIn } = useAuth();
+
   const paperTheme = {
     ...(scheme === 'dark' ? MD3DarkTheme : undefined),
     colors: {
@@ -45,7 +49,14 @@ function ThemedApp() {
     <RouterThemeProvider value={navTheme}>
       <PaperProvider theme={paperTheme}>
         <AnimatedSplashOverlay />
-        <AppTabs />
+        <Stack screenOptions={{ headerShown: false }}>
+          <Stack.Protected guard={!isLoggedIn}>
+            <Stack.Screen name="(auth)" />
+          </Stack.Protected>
+          <Stack.Protected guard={isLoggedIn}>
+            <Stack.Screen name="(tabs)" />
+          </Stack.Protected>
+        </Stack>
       </PaperProvider>
     </RouterThemeProvider>
   );
