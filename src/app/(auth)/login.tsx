@@ -1,7 +1,7 @@
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
-import React from "react";
-import { Pressable, StyleSheet, Text, View } from "react-native";
+import React, { useState } from "react";
+import { ActivityIndicator, Alert, Pressable, StyleSheet, Text, TextInput, View } from "react-native";
 import Animated, { FadeIn } from "react-native-reanimated";
 import { SafeAreaView } from "react-native-safe-area-context";
 
@@ -14,12 +14,24 @@ import { useAppTheme } from "@/context/theme-context";
 export default function LoginScreen() {
   const router = useRouter();
   const { palette } = useAppTheme();
-  const { login } = useAuth();
+  const { signIn } = useAuth();
   const styles = React.useMemo(() => getStyles(palette), [palette]);
 
-  function handleLogin() {
-    login();
-    router.replace("/");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [busy, setBusy] = useState(false);
+
+  async function handleLogin() {
+    if (!email || !password) {
+      Alert.alert("Missing fields", "Please enter your email and password.");
+      return;
+    }
+    setBusy(true);
+    const { error } = await signIn(email.trim(), password);
+    setBusy(false);
+    if (error) {
+      Alert.alert("Login failed", error.message);
+    }
   }
 
   return (
@@ -32,14 +44,34 @@ export default function LoginScreen() {
 
           <Animated.View entering={FadeIn.duration(500)}>
             <Text style={styles.title}>Log In</Text>
-            <Text style={styles.subtitle}>Login form coming next — this is a placeholder route.</Text>
+            <Text style={styles.subtitle}>Sign in with your email and password.</Text>
 
             <GlassCard style={styles.card}>
-              <Text style={styles.cardText}>Build the email/password form here.</Text>
+              <TextInput
+                style={styles.input}
+                placeholder="Email"
+                placeholderTextColor={palette.textTertiary}
+                autoCapitalize="none"
+                keyboardType="email-address"
+                value={email}
+                onChangeText={setEmail}
+              />
+              <TextInput
+                style={styles.input}
+                placeholder="Password"
+                placeholderTextColor={palette.textTertiary}
+                secureTextEntry
+                value={password}
+                onChangeText={setPassword}
+              />
             </GlassCard>
 
-            <Pressable style={styles.submitBtn} onPress={handleLogin}>
-              <Text style={styles.submitBtnText}>Log In (placeholder)</Text>
+            <Pressable style={styles.submitBtn} onPress={handleLogin} disabled={busy}>
+              {busy ? (
+                <ActivityIndicator color="#fff" />
+              ) : (
+                <Text style={styles.submitBtnText}>Log In</Text>
+              )}
             </Pressable>
           </Animated.View>
         </View>
@@ -55,8 +87,8 @@ const getStyles = (themePalette: AppPalette) =>
     backBtn: { width: 36, height: 36, alignItems: "center", justifyContent: "center", marginBottom: 16 },
     title: { fontSize: 26, fontWeight: "800", color: themePalette.textPrimary, marginBottom: 6 },
     subtitle: { fontSize: 13, color: themePalette.textSecondary, marginBottom: 24 },
-    card: { padding: 20, marginBottom: 20 },
-    cardText: { fontSize: 13, color: themePalette.textSecondary },
+    card: { padding: 20, marginBottom: 20, gap: 12 },
+    input: { fontSize: 15, color: themePalette.textPrimary, backgroundColor: themePalette.bgCard, borderRadius: 10, paddingHorizontal: 14, paddingVertical: 12, borderWidth: 1, borderColor: themePalette.bgCardBorder },
     submitBtn: { alignItems: "center", justifyContent: "center", paddingVertical: 15, borderRadius: 14, backgroundColor: Palette.accentPurple },
     submitBtnText: { fontSize: 15, fontWeight: "700", color: "#fff" },
   });

@@ -15,6 +15,7 @@ import { LinearGradient } from "expo-linear-gradient";
 import { GlassCard } from "@/components/ui/glass-card";
 import { GradientBackground } from "@/components/ui/gradient-background";
 import { Palette, type AppPalette } from "@/constants/theme";
+import { useAuth } from "@/context/auth-context";
 import { useAppTheme } from "@/context/theme-context";
 
 type MenuItemProps = {
@@ -69,7 +70,17 @@ function Divider() {
 
 export default function ProfileScreen() {
   const { palette, preference, setPreference } = useAppTheme();
+  const { user, signOut } = useAuth();
   const styles = React.useMemo(() => getStyles(palette), [palette]);
+
+  const fullName = user?.user_metadata?.full_name ?? "User";
+  const email = user?.email ?? "";
+  const initials = fullName
+    .split(" ")
+    .map((w: string) => w[0])
+    .join("")
+    .slice(0, 2)
+    .toUpperCase();
 
   return (
     <GradientBackground>
@@ -87,15 +98,15 @@ export default function ProfileScreen() {
                 style={styles.avatarRing}
               >
                 <View style={styles.avatarInner}>
-                  <Text style={styles.avatarInitials}>JD</Text>
+                  <Text style={styles.avatarInitials}>{initials}</Text>
                 </View>
               </LinearGradient>
               {/* Online dot */}
               <View style={styles.onlineDot} />
             </View>
 
-            <Text style={styles.userName}>John Doe</Text>
-            <Text style={styles.userHandle}>@johndoe_cherthala</Text>
+            <Text style={styles.userName}>{fullName}</Text>
+            <Text style={styles.userHandle}>{email}</Text>
             <View style={styles.rolePill}>
               <Ionicons name="shield-checkmark-outline" size={11} color={Palette.accentCyan} />
               <Text style={styles.roleText}>Verified Field Agent</Text>
@@ -277,7 +288,7 @@ export default function ProfileScreen() {
                 'Are you sure you want to log out?',
                 [
                   { text: 'Cancel', style: 'cancel' },
-                  { text: 'Log Out', style: 'destructive', onPress: () => Alert.alert('Logged Out', 'You have been logged out successfully.') },
+                  { text: 'Log Out', style: 'destructive', onPress: () => signOut() },
                 ]
               )}
             >

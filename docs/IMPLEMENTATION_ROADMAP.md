@@ -11,8 +11,7 @@
 | Layer | Technologies |
 |---|---|
 | **Mobile App** | React Native (0.86), Expo SDK 57, Expo Router, React Native Reanimated |
-| **Backend API** | Node.js + Express REST API |
-| **Database** | MongoDB (Mongoose ODM) |
+| **Backend / Auth / DB** | Supabase (PostgreSQL, Auth, Row-Level Security) |
 | **IoT Hardware & Firmware** | ESP32 Microcontroller, Wi-Fi / HTTP / MQTT |
 | **Sensors** | Electrical Conductivity (EC / TDS), pH sensor, Temperature (DS18B20), Ultrasonic Water Level (HC-SR04 / JSN-SR04T) |
 | **Machine Learning** | Python, scikit-learn, Random Forest classifier/regressor |
@@ -35,8 +34,8 @@ flowchart TD
     end
 
     subgraph Backend["Cloud Backend & Analytics"]
-        API["Node.js / Express REST API"]
-        DB[("MongoDB Database")]
+        API["Supabase (Auth + PostgREST API)"]
+        DB[("PostgreSQL Database")]
         DET["Rule-based Intrusion Detection Engine"]
         ML["AI/ML Prediction Service (Python / scikit-learn)"]
         NOTIF["Notification Service (FCM / Expo Push)"]
@@ -178,9 +177,9 @@ interface Prediction {
         ↓
     [Wi-Fi / Cellular Modem]
         ↓ HTTP POST /api/sensor/readings
-    [Node.js Express Backend]
+    [Supabase (PostgREST API)]
         ↓
-    [MongoDB Storage]
+    [PostgreSQL Storage]
         ↓
     [Rule-Based Threshold Engine + ML Service]
         ↓
@@ -217,7 +216,7 @@ Risk Level / Probability → Mobile App Display
 
 ```mermaid
 graph LR
-    P1["Phase 1: Simulation (Wokwi ESP32)"] --> P2["Phase 2: Backend + MongoDB"]
+    P1["Phase 1: Simulation (Wokwi ESP32)"] --> P2["Phase 2: Supabase + PostgreSQL"]
     P2 --> P3["Phase 3: Mobile App Polish"]
     P3 --> P4["Phase 4: Physical Sensor Hardware"]
     P4 --> P5["Phase 5: Alerts & Grievance Pipeline"]
@@ -227,7 +226,7 @@ graph LR
 ```
 
 1. **Phase 1 — Simulation**: Wokwi ESP32 simulation emitting simulated EC/TDS, pH, temperature, and water level readings.
-2. **Phase 2 — Backend API**: Node.js/Express REST server with MongoDB models for stations, readings, and complaints.
+2. **Phase 2 — Backend**: Supabase project with PostgreSQL tables, Row-Level Security policies, and Auth for stations, readings, and complaints.
 3. **Phase 3 — Mobile App**: Complete screens, integrate REST endpoints, state management, and offline cache.
 4. **Phase 4 — Physical Sensors**: Calibrate physical probes with standard buffer solutions and deploy ESP32 field units.
 5. **Phase 5 — Alerts & Grievance**: Push notifications when thresholds breach; live grievance lifecycle tracking.
