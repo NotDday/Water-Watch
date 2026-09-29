@@ -24,7 +24,7 @@
 The system connects field **IoT sensor stations (ESP32)** measuring water quality parameters with a **machine learning risk prediction engine**, delivering instant data, intrusion alerts, and a transparent **grievance reporting pipeline** directly to citizens and municipal authorities.
 
 > 📄 **Looking for the complete architecture and hardware roadmap?**  
-> See the [Implementation Roadmap](docs/IMPLEMENTATION_ROADMAP.md) covering IoT firmware, backend APIs, MongoDB schemas, and ML model training.
+> See the [Implementation Roadmap](docs/IMPLEMENTATION_ROADMAP.md) covering IoT firmware, Supabase/PostgreSQL schema, and ML model training.
 
 ---
 
@@ -95,7 +95,12 @@ Copy the sample environment file:
 cp .env.example .env
 ```
 
-Set the backend API endpoint (`EXPO_PUBLIC_API_URL`) to your local or deployed Express backend.
+Set your Supabase project credentials:
+
+```
+EXPO_PUBLIC_SUPABASE_URL=https://your-project-ref.supabase.co
+EXPO_PUBLIC_SUPABASE_ANON_KEY=your-anon-key-here
+```
 
 ### 4. Start the Development Server
 
