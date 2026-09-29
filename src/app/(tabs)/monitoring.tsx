@@ -15,7 +15,7 @@ import { GlassCard } from "@/components/ui/glass-card";
 import { GradientBackground } from "@/components/ui/gradient-background";
 import { Palette, getRiskColor, type AppPalette } from "@/constants/theme";
 import { useAppTheme } from "@/context/theme-context";
-import { mockStations, mockCurrentReadings, mockPredictions, Station, SensorReading, Prediction } from "@/data/mockData";
+import { useStations, useLatestReadings, useLatestPredictions, type Station, type SensorReading, type Prediction } from "@/hooks/useSupabaseData";
 
 type MetricRowProps = {
   icon: React.ReactNode;
@@ -66,7 +66,7 @@ function SignalBars({ level }: { level: number }) {
 
 type StationCardProps = {
   station: Station;
-  readings: SensorReading;
+  readings: SensorReading | undefined;
   prediction: Prediction | undefined;
   index: number;
   expanded: boolean;
@@ -76,8 +76,8 @@ type StationCardProps = {
 function StationCard({ station, readings, prediction, index, expanded, onToggle }: StationCardProps) {
   const { palette } = useAppTheme();
   const styles = React.useMemo(() => getStyles(palette), [palette]);
-  const riskColor = getRiskColor(prediction?.riskLevel);
-  const riskPct = Math.round((prediction?.riskProbability ?? 0) * 100);
+  const riskColor = getRiskColor(prediction?.risk_level);
+  const riskPct = Math.round((prediction?.risk_probability ?? 0) * 100);
 
   return (
     <Animated.View entering={FadeInDown.duration(500).delay(180 + index * 120)}>
@@ -121,7 +121,7 @@ function StationCard({ station, readings, prediction, index, expanded, onToggle 
             end={{ x: 1, y: 0 }}
             style={[styles.riskStripGrad, { width: `${riskPct}%` }]}
           />
-          <Text style={[styles.riskStripLabel, { color: riskColor }]}>{prediction?.riskLevel ?? "—"} Risk · {prediction?.predictionHorizon} forecast</Text>
+          <Text style={[styles.riskStripLabel, { color: riskColor }]}>{prediction?.risk_level ?? "—"} Risk · {prediction?.prediction_horizon} forecast</Text>
         </View>
 
         {/* Expanded metrics */}
@@ -131,7 +131,7 @@ function StationCard({ station, readings, prediction, index, expanded, onToggle 
             <MetricRow
               icon={<MaterialCommunityIcons name="lightning-bolt" size={14} color={Palette.accentCyan} />}
               label="Electrical Conductivity"
-              value={readings.ec.toFixed(1)}
+              value={readings?.ec != null ? readings.ec.toFixed(1) : "—"}
               unit="µS/cm"
               threshold="1500 µS/cm"
               accent={Palette.accentCyan}
@@ -139,7 +139,7 @@ function StationCard({ station, readings, prediction, index, expanded, onToggle 
             <MetricRow
               icon={<MaterialCommunityIcons name="water-opacity" size={14} color={Palette.accentBlue} />}
               label="Total Dissolved Solids"
-              value={readings.tds.toFixed(0)}
+              value={readings?.tds != null ? readings.tds.toFixed(0) : "—"}
               unit="ppm"
               threshold="1000 ppm"
               accent={Palette.accentBlue}
@@ -147,7 +147,7 @@ function StationCard({ station, readings, prediction, index, expanded, onToggle 
             <MetricRow
               icon={<MaterialCommunityIcons name="ph" size={14} color={Palette.accentGreen} />}
               label="pH Level"
-              value={readings.ph.toFixed(1)}
+              value={readings?.ph != null ? readings.ph.toFixed(1) : "—"}
               unit="pH"
               threshold="6.5 – 8.5"
               accent={Palette.accentGreen}
@@ -155,14 +155,14 @@ function StationCard({ station, readings, prediction, index, expanded, onToggle 
             <MetricRow
               icon={<Ionicons name="thermometer-outline" size={14} color={Palette.accentOrange} />}
               label="Temperature"
-              value={readings.temperature.toFixed(1)}
+              value={readings?.temperature != null ? readings.temperature.toFixed(1) : "—"}
               unit="°C"
               accent={Palette.accentOrange}
             />
             <MetricRow
               icon={<Ionicons name="water-outline" size={14} color={Palette.accentBlue} />}
               label="Water Level"
-              value={readings.waterLevel.toFixed(2)}
+              value={readings?.water_level != null ? readings.water_level.toFixed(2) : "—"}
               unit="m"
               accent={Palette.accentBlue}
             />
@@ -171,7 +171,7 @@ function StationCard({ station, readings, prediction, index, expanded, onToggle 
             <View style={styles.coordsRow}>
               <Ionicons name="globe-outline" size={12} color={palette.textTertiary} />
               <Text style={styles.coordsText}>
-                {station.coordinates.lat.toFixed(4)}°N · {station.coordinates.lng.toFixed(4)}°E
+                {station.lat.toFixed(4)}°N · {station.lng.toFixed(4)}°E
               </Text>
             </View>
           </Animated.View>
@@ -184,10 +184,15 @@ function StationCard({ station, readings, prediction, index, expanded, onToggle 
 export default function MonitoringScreen() {
   const { palette } = useAppTheme();
   const styles = React.useMemo(() => getStyles(palette), [palette]);
-  const [expandedId, setExpandedId] = useState<string | null>("ST-001");
+  const [expandedId, setExpandedId] = useState<string | null>(null);
 
-  const totalStations = mockStations.length;
-  const highRisk = mockPredictions.filter((p) => p.riskLevel === "High" || p.riskLevel === "Critical").length;
+  const { stations } = useStations();
+  const stationIds = React.useMemo(() => stations.map((s) => s.id), [stations]);
+  const { readings: readingsMap } = useLatestReadings(stationIds);
+  const { predictions } = useLatestPredictions(stationIds);
+
+  const totalStations = stations.length;
+  const highRisk = predictions.filter((p) => p.risk_level === "High" || p.risk_level === "Critical").length;
   const normal = totalStations - highRisk;
 
   return (
@@ -238,17 +243,21 @@ export default function MonitoringScreen() {
           </Animated.View>
 
           {/* ── Station cards ─────────────────────── */}
-          {mockStations.map((station, idx) => (
+          {stations.map((station, idx) => {
+            const r = readingsMap[station.id];
+            if (!r) return null;
+            return (
             <StationCard
               key={station.id}
               station={station}
-              readings={mockCurrentReadings[station.id]}
-              prediction={mockPredictions.find((p) => p.stationId === station.id)}
+              readings={r}
+              prediction={predictions.find((p) => p.station_id === station.id)}
               index={idx}
               expanded={expandedId === station.id}
               onToggle={() => setExpandedId(expandedId === station.id ? null : station.id)}
             />
-          ))}
+            );
+          })}
 
         </ScrollView>
       </SafeAreaView>

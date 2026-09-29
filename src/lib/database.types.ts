@@ -33,6 +33,7 @@ export type Database = {
           avatar_url?: string | null;
           updated_at?: string;
         };
+        Relationships: [];
       };
       stations: {
         Row: {
@@ -57,6 +58,7 @@ export type Database = {
           lat?: number;
           lng?: number;
         };
+        Relationships: [];
       };
       sensor_readings: {
         Row: {
@@ -88,6 +90,7 @@ export type Database = {
           water_level?: number;
           recorded_at?: string;
         };
+        Relationships: [];
       };
       predictions: {
         Row: {
@@ -112,6 +115,7 @@ export type Database = {
           risk_level?: "Low" | "Moderate" | "High" | "Critical";
           prediction_horizon?: string;
         };
+        Relationships: [];
       };
       complaints: {
         Row: {
@@ -144,6 +148,7 @@ export type Database = {
           status?: "Submitted" | "Under Investigation" | "Action Taken" | "Resolved";
           updated_at?: string;
         };
+        Relationships: [];
       };
     };
     Views: {

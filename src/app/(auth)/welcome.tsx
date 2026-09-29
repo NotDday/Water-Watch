@@ -11,14 +11,13 @@ import { GlassCard } from "@/components/ui/glass-card";
 import { GradientBackground } from "@/components/ui/gradient-background";
 import { BorderRadius, Palette, type AppPalette } from "@/constants/theme";
 import { useAppTheme } from "@/context/theme-context";
-import { mockStations } from "@/data/mockData";
 
 const STAT_ROWS = [
   {
     icon: "radio-outline" as const,
     color: Palette.accentCyan,
     label: "Monitoring stations live",
-    value: String(mockStations.length),
+    value: "3+",
   },
   {
     icon: "analytics-outline" as const,
